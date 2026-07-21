@@ -296,6 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initImageHover();
   initProductClicks();
   updateCartUI();
+  initSearchModal();
 
   // Cart drawer toggle
   const cartToggle = document.querySelector('.cart-toggle');
@@ -307,3 +308,210 @@ document.addEventListener('DOMContentLoaded', () => {
   const cartOverlay = document.querySelector('.cart-overlay');
   if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
 });
+
+/* ==========================================================================
+   SEARCH MODAL IMPLEMENTATION
+   ========================================================================== */
+function createSearchModalHTML() {
+  if (document.querySelector('.search-modal-overlay')) return;
+
+  const modalHTML = `
+    <div class="search-modal-overlay">
+      <div class="search-modal-container">
+        <div class="search-modal-header">
+          <div class="search-modal-input-wrapper">
+            <span class="search-modal-icon">&#128269;</span>
+            <input type="text" class="search-modal-input" placeholder="Search products, hoodies, tees, hats..." autocomplete="off">
+            <span class="search-modal-clear">&times;</span>
+          </div>
+          <button class="search-modal-close">&times;</button>
+        </div>
+        <div class="search-modal-body">
+          <div class="search-default-state">
+            <div class="search-section-title">Popular Searches</div>
+            <div class="search-tags">
+              <span class="search-tag">500 Million</span>
+              <span class="search-tag">Hoodies</span>
+              <span class="search-tag">Tee</span>
+              <span class="search-tag">Baseball Jersey</span>
+              <span class="search-tag">Beast Vibes</span>
+              <span class="search-tag">Shorts</span>
+            </div>
+          </div>
+          <div class="search-results-container"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function openSearch() {
+  createSearchModalHTML();
+  const overlay = document.querySelector('.search-modal-overlay');
+  const input = document.querySelector('.search-modal-input');
+  if (overlay) {
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => input && input.focus(), 100);
+  }
+}
+
+function closeSearch() {
+  const overlay = document.querySelector('.search-modal-overlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+}
+
+function initSearchModal() {
+  createSearchModalHTML();
+
+  const overlay = document.querySelector('.search-modal-overlay');
+  const input = document.querySelector('.search-modal-input');
+  const clearBtn = document.querySelector('.search-modal-clear');
+  const closeBtn = document.querySelector('.search-modal-close');
+  const resultsContainer = document.querySelector('.search-results-container');
+  const defaultState = document.querySelector('.search-default-state');
+
+  // Bind all buttons with class search-toggle or data-action="search"
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.search-toggle, [data-action="search"]');
+    if (btn) {
+      e.preventDefault();
+      openSearch();
+    }
+  });
+
+  if (closeBtn) closeBtn.addEventListener('click', closeSearch);
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeSearch();
+    });
+  }
+
+  // ESC key to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay && overlay.classList.contains('active')) {
+      closeSearch();
+    }
+  });
+
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const query = input.value.trim();
+        if (query) {
+          window.location.href = `shop-all.html?search=${encodeURIComponent(query)}`;
+        }
+      }
+    });
+
+    input.addEventListener('input', () => {
+      const query = input.value.trim().toLowerCase();
+      if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
+
+      if (!query) {
+        if (defaultState) defaultState.style.display = 'block';
+        if (resultsContainer) resultsContainer.innerHTML = '';
+        return;
+      }
+
+      if (defaultState) defaultState.style.display = 'none';
+
+      const matches = (typeof products !== 'undefined' ? products : []).filter(p => {
+        return (
+          p.title.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query) ||
+          p.type.toLowerCase().includes(query) ||
+          (p.description && p.description.toLowerCase().includes(query)) ||
+          (p.badges && p.badges.some(b => b.toLowerCase().includes(query)))
+        );
+      });
+
+      renderLiveSearchResults(matches, query);
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (input) {
+        input.value = '';
+        input.focus();
+        clearBtn.style.display = 'none';
+        if (defaultState) defaultState.style.display = 'block';
+        if (resultsContainer) resultsContainer.innerHTML = '';
+      }
+    });
+  }
+
+  // Tag click handlers
+  document.addEventListener('click', (e) => {
+    const tag = e.target.closest('.search-tag');
+    if (tag) {
+      const term = tag.textContent.trim();
+      if (input) {
+        input.value = term;
+        input.dispatchEvent(new Event('input'));
+        input.focus();
+      }
+    }
+  });
+}
+
+function renderLiveSearchResults(matches, query) {
+  const container = document.querySelector('.search-results-container');
+  if (!container) return;
+
+  if (matches.length === 0) {
+    container.innerHTML = `
+      <div class="search-no-results">
+        <h4>No products found for "${escapeHTML(query)}"</h4>
+        <p>Try searching for "tee", "hoodie", "500 million", or "shorts"</p>
+      </div>
+    `;
+    return;
+  }
+
+  const topResults = matches.slice(0, 5);
+  let html = `<div class="search-section-title">Products (${matches.length})</div><div class="search-results-list">`;
+
+  topResults.forEach(p => {
+    const badge = (p.badges && p.badges.length) ? `<span class="search-result-badge">${p.badges[0]}</span>` : '';
+    html += `
+      <a href="product.html?id=${p.id}" class="search-result-item">
+        <img src="${p.images[0]}" alt="${escapeHTML(p.title)}" class="search-result-thumb">
+        <div class="search-result-info">
+          <div class="search-result-title">${escapeHTML(p.title)}</div>
+          <div class="search-result-meta">
+            <span>${escapeHTML(p.type)}</span>
+            ${badge}
+          </div>
+        </div>
+        <div class="search-result-price">${p.price}</div>
+      </a>
+    `;
+  });
+
+  html += `</div>`;
+
+  if (matches.length > 0) {
+    html += `
+      <a href="shop-all.html?search=${encodeURIComponent(query)}" class="search-view-all-btn">
+        View All ${matches.length} Results &rarr;
+      </a>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+

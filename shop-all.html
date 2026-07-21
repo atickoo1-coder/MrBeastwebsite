@@ -34,7 +34,7 @@
       <a href="index.html" class="logo">MRBEAST.STORE</a>
     </div>
     <div class="header-right">
-      <button class="icon-btn" onclick="alert('Search functionality coming soon')">&#128269;</button>
+      <button class="icon-btn search-toggle" aria-label="Search">&#128269;</button>
       <button class="icon-btn" onclick="alert('Login page coming soon')">&#128100;</button>
       <button class="icon-btn cart-toggle">
         &#128722;
@@ -269,6 +269,12 @@
   <aside class="filter-sidebar">
     <div class="mobile-filter-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">Filter &darr;</div>
     <div>
+      <div class="sidebar-search-box">
+        <div class="sidebar-search-input-wrap">
+          <input type="text" id="shop-search-input" class="sidebar-search-input" placeholder="Search catalog..." autocomplete="off">
+          <span class="sidebar-search-clear">&times;</span>
+        </div>
+      </div>
       <div class="filter-group">
         <h4>Product type <span>-</span></h4>
         <div class="filter-options">
