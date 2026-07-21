@@ -518,35 +518,45 @@ function escapeHTML(str) {
 
 /* Auth Session Status Helper */
 async function checkAuthStatus() {
+  const isAuthSubdir = window.location.pathname.includes('/auth/');
+  const apiPath = isAuthSubdir ? 'api.php?action=me' : 'auth/api.php?action=me';
+  const accountPath = isAuthSubdir ? 'account.html' : 'auth/account.html';
+  const loginPath = isAuthSubdir ? 'login.html' : 'auth/login.html';
+
+  let user = null;
+
   try {
-    const isAuthSubdir = window.location.pathname.includes('/auth/');
-    const apiPath = isAuthSubdir ? 'api.php?action=me' : 'auth/api.php?action=me';
-    const accountPath = isAuthSubdir ? 'account.php' : 'auth/account.php';
-    const loginPath = isAuthSubdir ? 'login.php' : 'auth/login.php';
-
     const res = await fetch(apiPath);
-    if (!res.ok) return;
-    const data = await res.json();
-
-    const userBtns = document.querySelectorAll('.user-btn');
-    userBtns.forEach(btn => {
+    if (res.ok) {
+      const data = await res.json();
       if (data && data.logged_in && data.user) {
-        btn.setAttribute('title', `Account (${data.user.first_name})`);
-        btn.onclick = (e) => {
-          e.preventDefault();
-          window.location.href = accountPath;
-        };
-      } else {
-        btn.setAttribute('title', 'Login / Sign Up');
-        btn.onclick = (e) => {
-          e.preventDefault();
-          window.location.href = loginPath;
-        };
+        user = data.user;
       }
-    });
-  } catch (err) {
-    // Fail gracefully
+    }
+  } catch (err) {}
+
+  if (!user) {
+    try {
+      user = JSON.parse(localStorage.getItem('mrbeastUser'));
+    } catch (e) {}
   }
+
+  const userBtns = document.querySelectorAll('.user-btn');
+  userBtns.forEach(btn => {
+    if (user && user.first_name) {
+      btn.setAttribute('title', `Account (${user.first_name})`);
+      btn.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = accountPath;
+      };
+    } else {
+      btn.setAttribute('title', 'Login / Sign Up');
+      btn.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = loginPath;
+      };
+    }
+  });
 }
 
 
