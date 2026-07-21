@@ -297,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initProductClicks();
   updateCartUI();
   initSearchModal();
+  checkAuthStatus();
 
   // Cart drawer toggle
   const cartToggle = document.querySelector('.cart-toggle');
@@ -514,4 +515,38 @@ function escapeHTML(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
+/* Auth Session Status Helper */
+async function checkAuthStatus() {
+  try {
+    const isAuthSubdir = window.location.pathname.includes('/auth/');
+    const apiPath = isAuthSubdir ? 'api.php?action=me' : 'auth/api.php?action=me';
+    const accountPath = isAuthSubdir ? 'account.php' : 'auth/account.php';
+    const loginPath = isAuthSubdir ? 'login.php' : 'auth/login.php';
+
+    const res = await fetch(apiPath);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const userBtns = document.querySelectorAll('.user-btn');
+    userBtns.forEach(btn => {
+      if (data && data.logged_in && data.user) {
+        btn.setAttribute('title', `Account (${data.user.first_name})`);
+        btn.onclick = (e) => {
+          e.preventDefault();
+          window.location.href = accountPath;
+        };
+      } else {
+        btn.setAttribute('title', 'Login / Sign Up');
+        btn.onclick = (e) => {
+          e.preventDefault();
+          window.location.href = loginPath;
+        };
+      }
+    });
+  } catch (err) {
+    // Fail gracefully
+  }
+}
+
 

@@ -102,8 +102,10 @@ switch ($action) {
         echo json_encode(['success' => true, 'message' => 'Logged out successfully.']);
         break;
 
+    case 'me':
     case 'check':
         echo json_encode([
+            'success'   => true,
             'logged_in' => isUserLoggedIn(),
             'user'      => getCurrentUser(),
         ]);

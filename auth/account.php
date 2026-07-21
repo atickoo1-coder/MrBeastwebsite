@@ -1,0 +1,107 @@
+<?php
+require_once __DIR__ . '/../includes/frontend-config.php';
+require_once __DIR__ . '/../includes/auth.php';
+
+if (!isUserLoggedIn()) {
+    header('Location: ' . APP_URL . '/auth/login.php');
+    exit;
+}
+
+$user = getCurrentUser();
+$pageTitle = 'My Account';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account | MrBeast Store</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .account-page { min-height: 100vh; display: flex; flex-direction: column; background: #0a0a0a; color: #fff; }
+    .account-container { max-width: 960px; margin: 40px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; }
+    .account-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 24px; border-bottom: 1px solid #222; margin-bottom: 32px; }
+    .account-header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 2px; margin: 0; }
+    .account-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 32px; }
+    @media (max-width: 768px) { .account-grid { grid-template-columns: 1fr; } }
+    .account-card { background: #121212; border: 1px solid #222; border-radius: 16px; padding: 28px; }
+    .account-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; color: #ff4d00; }
+    .info-row { margin-bottom: 16px; font-size: 14px; }
+    .info-row label { display: block; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .info-row span { font-weight: 600; color: #eee; }
+    .btn-logout { width: 100%; padding: 12px; background: #222; color: #ff4444; border: 1px solid #333; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px; margin-top: 16px; }
+    .btn-logout:hover { background: #ff4444; color: #fff; border-color: #ff4444; }
+    .empty-orders { text-align: center; padding: 40px 20px; color: #888; }
+    .empty-orders p { margin-bottom: 20px; font-size: 15px; }
+  </style>
+</head>
+<body>
+<div class="account-page">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="mobile-toggle">&#9776;</div>
+        <a href="../shop-all.html" class="nav-link">SHOP ALL</a>
+      </div>
+      <div class="header-center">
+        <a href="../index.html" class="logo">MRBEAST.STORE</a>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn search-toggle">&#128269;</button>
+        <button class="icon-btn cart-toggle">&#128722; <span class="cart-count">0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="account-container">
+    <div class="account-header">
+      <div>
+        <h1>MY ACCOUNT</h1>
+        <p style="color:#888;font-size:14px;margin-top:4px;">Welcome back, <?= htmlspecialchars($user['first_name'] ?? 'Beast') ?>!</p>
+      </div>
+    </div>
+
+    <div class="account-grid">
+      <div class="account-card">
+        <h3>Account Profile</h3>
+        <div class="info-row">
+          <label>Full Name</label>
+          <span><?= htmlspecialchars(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?></span>
+        </div>
+        <div class="info-row">
+          <label>Email Address</label>
+          <span><?= htmlspecialchars($user['email'] ?? '') ?></span>
+        </div>
+        <button class="btn-logout" id="logoutBtn">Log Out</button>
+      </div>
+
+      <div class="account-card">
+        <h3>Order History</h3>
+        <div class="empty-orders">
+          <p>You haven't placed any orders yet.</p>
+          <a href="../shop-all.html" class="btn-primary" style="display:inline-block;padding:12px 28px;text-decoration:none;border-radius:8px;">Explore Merch</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/products.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  try {
+    const res = await fetch('api.php?action=logout');
+    const data = await res.json();
+    if (data.success) {
+      window.location.href = '../index.html';
+    }
+  } catch (e) {
+    window.location.href = '../index.html';
+  }
+});
+</script>
+</body>
+</html>
